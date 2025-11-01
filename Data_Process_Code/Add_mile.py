@@ -2,27 +2,26 @@ import pandas as pd
 from geopy.distance import geodesic
 
 
-file_path = 'routes.csv'
-df = pd.read_csv(file_path)
+df = pd.read_csv('routes.csv')
 
 
-def calculate_mile(row):
+def calculate_distance(row):
     if row['station_order'] == 1:
-        return 0.0
+        return 0.00
     else:
-        prev_station = df[(df['train_id'] == row['train_id']) &
-                          (df['station_order'] == row['station_order'] - 1)]
-        if not prev_station.empty:
-            prev_lat, prev_lon = prev_station.iloc[0]['lat'], prev_station.iloc[0]['lon']
-            curr_lat, curr_lon = row['lat'], row['lon']
-            distance = geodesic((prev_lat, prev_lon), (curr_lat, curr_lon)).kilometers
-            return round(distance, 1)
-        else:
-            return 0.0
+
+        prev_lat = df.loc[row.name - 1, 'lat']
+        prev_lon = df.loc[row.name - 1, 'lon']
+        distance = geodesic((prev_lat, prev_lon), (row['lat'], row['lon'])).kilometers
+        return round(distance, 2)
 
 
-df['mile'] = df.apply(calculate_mile, axis=1)
+df['distance'] = df.apply(calculate_distance, axis=1)
 
 
-output_file = 'routes.csv'
-df.to_csv(output_file, index=False)
+df['distance'] = df['distance'].round(2)
+
+output_path = 'routes_distance.csv'
+df.to_csv(output_path, index=False)
+
+print(f"Processing completed, the results have been saved to：{output_path}")
